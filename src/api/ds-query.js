@@ -24,7 +24,7 @@ export function getColumns(params) {
 export function getColumnsByQuerySql(params) {
   return request({
     url: '/api/jdbcDatasourceQuery/getColumnsByQuerySql',
-    method: 'get',
+    method: 'post',
     params
   })
 }

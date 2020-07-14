@@ -27,9 +27,13 @@
       fit
       highlight-current-row
     >
-      <!-- <el-table-column align="center" label="序号" width="95">
-        <template slot-scope="scope">{{ scope.$index }}</template>
-      </el-table-column> -->
+      <el-table-column
+        type="selection"
+        width="40" align="center">
+      </el-table-column>
+      <el-table-column align="center" label="序号" width="95">
+        <template slot-scope="scope">{{ scope.row.id }}</template>
+      </el-table-column>
       <el-table-column label="数据源" width="200" align="center">
         <template slot-scope="scope">{{ scope.row.datasource }}</template>
       </el-table-column>
@@ -55,9 +59,9 @@
       <!--      <el-table-column label="数据库名" width="200" align="center" :show-overflow-tooltip="true">-->
       <!--        <template slot-scope="scope">{{ scope.row.databaseName ? scope.row.databaseName:'-' }}</template>-->
       <!--      </el-table-column>-->
-      <el-table-column label="备注" width="150" align="center">
-        <template slot-scope="scope">{{ scope.row.comments }}</template>
-      </el-table-column>
+<!--      <el-table-column label="备注" width="150" align="center">-->
+<!--        <template slot-scope="scope">{{ scope.row.comments }}</template>-->
+<!--      </el-table-column>-->
       <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">

@@ -80,7 +80,7 @@ export const constantRoutes = [
         path: 'dashboard',
         component: () => import('@/views/dashboard/admin/index'),
         name: 'Dashboard',
-        meta: { title: '运行报表', icon: 'dashboard', affix: true }
+        meta: {title: '运行报表', icon: 'dashboard', affix: true}
       }
     ]
   }
@@ -101,7 +101,7 @@ export const asyncRoutes = [
         path: 'index',
         component: () => import('@/views/profile/index'),
         name: 'Profile',
-        meta: { title: 'Profile', icon: 'user', noCache: true }
+        meta: {title: 'Profile', icon: 'user', noCache: true}
       }
     ]
   },
@@ -120,13 +120,13 @@ export const asyncRoutes = [
         path: '401',
         component: () => import('@/views/error-page/401'),
         name: 'Page401',
-        meta: { title: '401', noCache: true }
+        meta: {title: '401', noCache: true}
       },
       {
         path: '404',
         component: () => import('@/views/error-page/404'),
         name: 'Page404',
-        meta: { title: '404', noCache: true }
+        meta: {title: '404', noCache: true}
       }
     ]
   },
@@ -134,21 +134,21 @@ export const asyncRoutes = [
     path: '/data/log',
     hidden: true,
     component: () => import('@/views/datax/jobLog/log'),
-    meta: { title: '任务日志', icon: 'work' }
+    meta: {title: '任务日志', icon: 'work'}
   },
   {
     path: '/datax/job',
     component: Layout,
     redirect: '/datax/job',
     name: 'Example',
-    meta: { title: '任务管理', icon: 'work' },
+    meta: {title: '任务管理', icon: 'work'},
     children: [
 
       {
         path: 'jobInfo',
         name: 'jobInfo',
         component: () => import('@/views/datax/jobInfo/index'),
-        meta: { title: '任务管理', icon: 'task-cfg' }
+        meta: {title: '任务管理', icon: 'task-cfg'}
       },
       // {
       //   path: 'plugin',
@@ -160,19 +160,19 @@ export const asyncRoutes = [
         path: 'jobTemplate',
         name: 'jobTemplate',
         component: () => import('@/views/datax/jobTemplate/index'),
-        meta: { title: 'datax 任务模板', icon: 'task-tmp' }
+        meta: {title: 'datax 任务模板', icon: 'task-tmp'}
       },
       {
         path: 'jsonBuild',
         name: 'jsonBuild',
         component: () => import('@/views/datax/json-build/index'),
-        meta: { title: '任务构建', icon: 'guide' }
+        meta: {title: '任务构建', icon: 'guide'}
       },
       {
         path: 'jdbcDatasource',
         name: 'jdbcDatasource',
         component: () => import('@/views/datax/jdbc-datasource/index'),
-        meta: { title: '数据源管理', icon: 'cfg-datasouce' }
+        meta: {title: '数据源管理', icon: 'cfg-datasouce', roles: ['ROLE_ADMIN']}
       }
     ]
   },
@@ -181,13 +181,13 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/datax/jobLog',
     name: 'Example',
-    meta: { title: '日志管理', icon: 'work' },
+    meta: {title: '日志管理', icon: 'work'},
     children: [
       {
         path: 'jobLog',
         name: 'jobLog',
         component: () => import('@/views/datax/jobLog/index'),
-        meta: { title: '日志管理', icon: 'log' }
+        meta: {title: '日志管理', icon: 'log'}
       }
     ]
   },
@@ -196,13 +196,13 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/datax/executor',
     name: 'Example',
-    meta: { title: '执行器管理', icon: 'work' },
+    meta: {title: '执行器管理', icon: 'work'},
     children: [
       {
         path: 'executor',
         name: 'executor',
         component: () => import('@/views/datax/executor/index'),
-        meta: { title: '执行器管理', icon: 'exe-cfg' }
+        meta: {title: '执行器管理', icon: 'exe-cfg'}
       }
     ]
   },
@@ -211,13 +211,31 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/datax/user',
     name: 'Example',
-    meta: { title: '用户管理', icon: 'work' },
+    meta: {title: '用户管理', icon: 'log'},
     children: [
       {
         path: 'user',
         name: 'user',
         component: () => import('@/views/datax/user/index'),
-        meta: { title: '用户管理', icon: 'table', roles: ['ROLE_ADMIN'] }
+        meta: {title: '用户管理', icon: 'table', roles: ['ROLE_ADMIN']}
+      },
+      {
+        path: 'permission',
+        name: 'permission',
+        component: () => import('@/views/datax/user/permission'),
+        meta: {title: '权限管理', icon: 'cfg-datasouce', roles: ['ROLE_ADMIN']}
+      },
+      {
+        path: 'role',
+        name: 'role',
+        component: () => import('@/views/datax/user/role'),
+        meta: {title: '角色管理', icon: 'task-tmp', roles: ['ROLE_ADMIN']}
+      },
+      {
+        path: 'userLogs',
+        name: 'userLogs',
+        component: () => import('@/views/datax/user/logs'),
+        meta: {title: '用户操作日志', icon: 'skill', roles: ['ROLE_ADMIN']}
       }
     ]
   },
@@ -226,24 +244,24 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/datax/registry',
     name: 'Example',
-    meta: { title: '资源监控', icon: 'work' },
+    meta: {title: '资源监控', icon: 'work'},
     children: [
       {
         path: 'registry',
         name: 'registry',
         component: () => import('@/views/datax/registry/index'),
-        meta: { title: '资源监控', icon: 'battery-line' }
+        meta: {title: '资源监控', icon: 'battery-line', roles: ['ROLE_ADMIN']}
       }
     ]
   },
   toolRouter,
   // 404 page must be placed at the end !!!
-  { path: '*', redirect: '/404', hidden: true }
+  {path: '*', redirect: '/404', hidden: true}
 ]
 
 const createRouter = () => new Router({
   // mode: 'history', // require service support
-  scrollBehavior: () => ({ y: 0 }),
+  scrollBehavior: () => ({y: 0}),
   routes: constantRoutes
 })
 

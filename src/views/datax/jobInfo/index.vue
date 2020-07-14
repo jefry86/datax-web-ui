@@ -1,23 +1,41 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-input v-model="listQuery.jobDesc" placeholder="任务名称" style="width: 200px;" class="filter-item" />
-      <el-select v-model="jobProjects" multiple placeholder="所属项目" class="filter-item">
-        <el-option v-for="item in jobProjectList" :key="item.jobProject" :label="item.jobProject" :value="item.jobProject" />
+      <el-input v-model="listQuery.jobDesc" placeholder="任务名称" style="width: 150px;" class="filter-item"/>
+      <el-select v-model="jobProjects" multiple placeholder="所属项目" style="width: 150px" class="filter-item">
+        <el-option v-for="item in jobProjectList" :key="item.jobProject" :label="item.jobProject"
+                   :value="item.jobProject"/>
       </el-select>
 
-      <el-select v-model="authors" multiple placeholder="负责人" class="filter-item">
-        <el-option v-for="item in authorList" :key="item.id" :label="item.nickname" :value="item.id" />
+      <el-select v-model="authors" multiple placeholder="负责人" style="width: 120px" class="filter-item">
+        <el-option v-for="item in authorList" :key="item.id" :label="item.nickname" :value="item.id"/>
       </el-select>
-      <el-select v-model="listQuery.glueType" placeholder="任务类型" style="width: 200px" class="filter-item">
-        <el-option v-for="item in glueTypes" :key="item.value" :label="item.label" :value="item.value" />
+      <el-select v-model="listQuery.glueType" placeholder="任务类型" style="width: 120px" class="filter-item">
+        <el-option v-for="item in glueTypes" :key="item.value" :label="item.label" :value="item.value"/>
       </el-select>
       <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="fetchData">
         搜索
       </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit"
+                 @click="handleCreate">
         添加
       </el-button>
+
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-refresh-right"
+                 @click="handlerExecute">
+        执行
+      </el-button>
+
+      <el-dropdown class="filter-item" style="margin-left: 10px;" @command="handleCommand">
+        <el-button type="primary">
+          <i class="el-icon-finished"></i> 状态
+        </el-button>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item command="1">启用</el-dropdown-item>
+          <el-dropdown-item command="0">禁用</el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+
       <!-- <el-checkbox v-model="showReviewer" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">
         reviewer
       </el-checkbox> -->
@@ -29,8 +47,14 @@
       border
       fit
       highlight-current-row
+      @selection-change="handleSelectionChange"
+      :row-key="handleReserve"
     >
-      <el-table-column align="center" label="ID" width="80">
+      <el-table-column
+        type="selection"
+        width="40" align="center">
+      </el-table-column>
+      <el-table-column align="center" label="ID" width="60">
         <template slot-scope="scope">{{ scope.row.id }}</template>
       </el-table-column>
       <el-table-column label="任务名称" align="center" width="200">
@@ -39,24 +63,14 @@
       <el-table-column label="所属项目" align="center" width="120">
         <template slot-scope="scope">{{ scope.row.jobProject }}</template>
       </el-table-column>
-      <el-table-column label="Cron" align="center" width="150">
+      <el-table-column label="Cron" align="center" width="120">
         <template slot-scope="scope">
           <span>{{ scope.row.jobCron }}</span>
         </template>
       </el-table-column>
       <el-table-column label="路由策略" align="center" width="100">
-        <template slot-scope="scope"> {{ routeStrategies.find(t => t.value === scope.row.executorRouteStrategy).label }}</template>
-      </el-table-column>
-      <el-table-column label="状态" align="center" width="80">
-        <template slot-scope="scope">
-          <el-switch
-            v-model="scope.row.triggerStatus"
-            active-color="#00A854"
-            :active-value="1"
-            inactive-color="#F04134"
-            :inactive-value="0"
-            @change="changeSwitch(scope.row)"
-          />
+        <template slot-scope="scope"> {{ routeStrategies.find(t => t.value === scope.row.executorRouteStrategy).label
+          }}
         </template>
       </el-table-column>
       <el-table-column label="注册节点" align="center" width="120">
@@ -67,9 +81,9 @@
             @show="loadById(scope.row)"
           >
             <el-table :data="registerNode">
-              <el-table-column width="150" property="title" label="执行器名称" />
-              <el-table-column width="150" property="appName" label="appName" />
-              <el-table-column width="150" property="registryList" label="机器地址" />
+              <el-table-column width="150" property="title" label="执行器名称"/>
+              <el-table-column width="150" property="appName" label="appName"/>
+              <el-table-column width="150" property="registryList" label="机器地址"/>
             </el-table>
             <el-button slot="reference">查看</el-button>
           </el-popover>
@@ -82,7 +96,7 @@
             width="300"
             @show="nextTriggerTime(scope.row)"
           >
-            <h5 v-html="triggerNextTimes" />
+            <h5 v-html="triggerNextTimes"/>
             <el-button slot="reference">查看</el-button>
           </el-popover>
         </template>
@@ -90,6 +104,26 @@
       <el-table-column label="执行状态" align="center" width="80">
         <template slot-scope="scope"> {{ statusList.find(t => t.value === scope.row.lastHandleCode).label }}</template>
       </el-table-column>
+      <el-table-column label="执行消耗时长" align="center" width="80">
+        <template slot-scope="scope">
+          <span v-if="scope.row.lastHandleCode==0">-</span>
+          <span v-else>{{scope.row.expTime/1000}}s</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="状态" align="center" width="70">
+        <template slot-scope="scope">
+          <el-switch
+            v-model="scope.row.triggerStatus"
+            active-color="#00A854"
+            :active-value="1"
+            inactive-color="#F04134"
+            :inactive-value="0"
+            @change="changeSwitch(scope.row)"
+          />
+        </template>
+      </el-table-column>
+
       <el-table-column label="操作" align="center">
         <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handlerExecute(row)">
@@ -107,7 +141,8 @@
         </template>
       </el-table-column>
     </el-table>
-    <pagination v-show="total>0" :total="total" :page.sync="listQuery.current" :limit.sync="listQuery.size" @pagination="fetchData" />
+    <pagination v-show="total>0" :total="total" :page.sync="listQuery.current" :limit.sync="listQuery.size"
+                @pagination="fetchData"/>
 
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" width="1000px">
       <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="110px">
@@ -119,7 +154,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="所属项目" prop="jobProject">
-              <el-input v-model="temp.jobProject" size="medium" placeholder="请输入所属项目" />
+              <el-input v-model="temp.jobProject" size="medium" placeholder="请输入所属项目"/>
             </el-form-item>
           </el-col>
         </el-row>
@@ -127,13 +162,13 @@
           <el-col :span="12">
             <el-form-item label="执行器" prop="jobGroup">
               <el-select v-model="temp.jobGroup" placeholder="请选择执行器">
-                <el-option v-for="item in executorList" :key="item.id" :label="item.title" :value="item.id" />
+                <el-option v-for="item in executorList" :key="item.id" :label="item.title" :value="item.id"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="Cron" prop="jobCron">
-              <el-input v-model="temp.jobCron" placeholder="请输入Cron表达式" />
+              <el-input v-model="temp.jobCron" placeholder="请输入Cron表达式"/>
             </el-form-item>
           </el-col>
         </el-row>
@@ -141,7 +176,7 @@
           <el-col :span="12">
             <el-form-item label="阻塞处理" prop="executorBlockStrategy">
               <el-select v-model="temp.executorBlockStrategy" placeholder="请选择阻塞处理策略">
-                <el-option v-for="item in blockStrategies" :key="item.value" :label="item.label" :value="item.value" />
+                <el-option v-for="item in blockStrategies" :key="item.value" :label="item.label" :value="item.value"/>
               </el-select>
             </el-form-item>
           </el-col>
@@ -149,7 +184,7 @@
           <el-col :span="12">
             <el-form-item label="路由策略" prop="executorRouteStrategy">
               <el-select v-model="temp.executorRouteStrategy" placeholder="请选择路由策略">
-                <el-option v-for="item in routeStrategies" :key="item.value" :label="item.label" :value="item.value" />
+                <el-option v-for="item in routeStrategies" :key="item.value" :label="item.label" :value="item.value"/>
               </el-select>
             </el-form-item>
           </el-col>
@@ -159,30 +194,30 @@
           <el-col :span="12">
             <el-form-item label="任务类型" prop="glueType">
               <el-select v-model="temp.glueType" placeholder="任务脚本类型">
-                <el-option v-for="item in glueTypes" :key="item.value" :label="item.label" :value="item.value" />
+                <el-option v-for="item in glueTypes" :key="item.value" :label="item.label" :value="item.value"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="负责人" prop="author">
               <el-select v-model="temp.author" multiple placeholder="请输入负责人" value-key="id">
-                <el-option v-for="item in authorList" :key="item.id" :label="item.nickname" :value="item" />
+                <el-option v-for="item in authorList" :key="item.id" :label="item.nickname" :value="item"/>
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="父任务ID">
-              <el-select v-model="temp.parentJobId" multiple placeholder="父任务ID" value-key="id">
-                <el-option v-for="item in JobIdList" :key="item.id" :label="item.jobDesc" :value="item" />
-              </el-select>
-            </el-form-item>
-          </el-col>
+          <!--          <el-col :span="12">-->
+          <!--            <el-form-item label="父任务ID">-->
+          <!--              <el-select v-model="temp.parentJobId" multiple placeholder="父任务ID" value-key="id">-->
+          <!--                <el-option v-for="item in JobIdList" :key="item.id" :label="item.jobDesc" :value="item" />-->
+          <!--              </el-select>-->
+          <!--            </el-form-item>-->
+          <!--          </el-col>-->
           <el-col :span="12">
             <el-form-item label="子任务ID">
               <el-select v-model="temp.childJobId" multiple placeholder="子任务ID" value-key="id">
-                <el-option v-for="item in JobIdList" :key="item.id" :label="item.jobDesc" :value="item" />
+                <el-option v-for="item in JobIdList" :key="item.id" :label="item.jobDesc" :value="item"/>
               </el-select>
             </el-form-item>
           </el-col>
@@ -190,19 +225,19 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="超时时间(分钟)">
-              <el-input-number v-model="temp.executorTimeout" :min="0" :max="20" />
+              <el-input-number v-model="temp.executorTimeout" :min="0" :max="20"/>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="失败重试次数">
-              <el-input-number v-model="temp.executorFailRetryCount" :min="0" :max="20" />
+              <el-input-number v-model="temp.executorFailRetryCount" :min="0" :max="20"/>
             </el-form-item>
           </el-col>
         </el-row>
         <el-row v-if="temp.glueType==='BEAN'" :gutter="20">
           <el-col>
             <el-form-item label="增量时间字段">
-              <el-input v-model="temp.replaceParam" placeholder="-DlastTime='%s' -DcurrentTime='%s'" />
+              <el-input v-model="temp.replaceParam" placeholder="-DlastTime='%s' -DcurrentTime='%s'"/>
             </el-form-item>
           </el-col>
         </el-row>
@@ -211,7 +246,8 @@
           <el-col :span="12">
             <el-form-item label="增量时间格式" prop="replaceParamType">
               <el-select v-model="temp.replaceParamType" placeholder="增量时间格式" @change="incStartTimeFormat">
-                <el-option v-for="item in replaceFormatTypes" :key="item.value" :label="item.label" :value="item.value" />
+                <el-option v-for="item in replaceFormatTypes" :key="item.value" :label="item.label"
+                           :value="item.value"/>
               </el-select>
             </el-form-item>
           </el-col>
@@ -230,32 +266,32 @@
         <el-row v-if="temp.glueType==='BEAN'" :gutter="20">
           <el-col :span="12">
             <el-form-item label="分区字段">
-              <el-input v-model="partitionField" placeholder="请输入分区字段" style="width: 56%" />
+              <el-input v-model="partitionField" placeholder="请输入分区字段" style="width: 56%"/>
             </el-form-item>
           </el-col>
           <el-col :span="7">
             <el-form-item v-show="partitionField" label="分区时间">
               <el-select v-model="timeFormatType" placeholder="分区时间格式">
-                <el-option v-for="item in timeFormatTypes" :key="item.value" :label="item.label" :value="item.value" />
+                <el-option v-for="item in timeFormatTypes" :key="item.value" :label="item.label" :value="item.value"/>
               </el-select>
             </el-form-item>
           </el-col>
           <el-col v-show="partitionField" :span="5">
-            <el-input-number v-model="timeOffset" :min="-20" :max="0" style="width: 65%" />
+            <el-input-number v-model="timeOffset" :min="-20" :max="0" style="width: 65%"/>
           </el-col>
         </el-row>
         <el-row v-if="temp.glueType==='BEAN'" :gutter="20">
           <el-col :span="24">
             <el-form-item label="JVM启动参数">
-              <el-input v-model="temp.jvmParam" placeholder="-Xms1024m -Xmx1024m -XX:+HeapDumpOnOutOfMemoryError" />
+              <el-input v-model="temp.jvmParam" placeholder="-Xms1024m -Xmx1024m -XX:+HeapDumpOnOutOfMemoryError"/>
             </el-form-item>
           </el-col>
         </el-row>
       </el-form>
-      <json-editor v-if="temp.glueType==='BEAN'" ref="jsonEditor" v-model="jobJson" />
-      <shell-editor v-if="temp.glueType==='GLUE_SHELL'" ref="shellEditor" v-model="glueSource" />
-      <python-editor v-if="temp.glueType==='GLUE_PYTHON'" ref="pythonEditor" v-model="glueSource" />
-      <powershell-editor v-if="temp.glueType==='GLUE_POWERSHELL'" ref="powershellEditor" v-model="glueSource" />
+      <json-editor v-if="temp.glueType==='BEAN'" ref="jsonEditor" v-model="jobJson"/>
+      <shell-editor v-if="temp.glueType==='GLUE_SHELL'" ref="shellEditor" v-model="glueSource"/>
+      <python-editor v-if="temp.glueType==='GLUE_PYTHON'" ref="pythonEditor" v-model="glueSource"/>
+      <powershell-editor v-if="temp.glueType==='GLUE_POWERSHELL'" ref="powershellEditor" v-model="glueSource"/>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">
           取消
@@ -269,462 +305,520 @@
 </template>
 
 <script>
-import * as executor from '@/api/datax-executor'
-import * as job from '@/api/datax-job-info'
-import waves from '@/directive/waves' // waves directive
-import Pagination from '@/components/Pagination' // secondary package based on el-pagination
-import JsonEditor from '@/components/JsonEditor'
-import ShellEditor from '@/components/ShellEditor'
-import PythonEditor from '@/components/PythonEditor'
-import PowershellEditor from '@/components/PowershellEditor'
+  import * as executor from '@/api/datax-executor'
+  import * as job from '@/api/datax-job-info'
+  import waves from '@/directive/waves' // waves directive
+  import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+  import JsonEditor from '@/components/JsonEditor'
+  import ShellEditor from '@/components/ShellEditor'
+  import PythonEditor from '@/components/PythonEditor'
+  import PowershellEditor from '@/components/PowershellEditor'
 
-export default {
-  name: 'JobInfo',
-  components: { Pagination, JsonEditor, ShellEditor, PythonEditor, PowershellEditor },
-  directives: { waves },
-  filters: {
-    statusFilter(status) {
-      const statusMap = {
-        published: 'success',
-        draft: 'gray',
-        deleted: 'danger'
+  export default {
+    name: 'JobInfo',
+    components: {Pagination, JsonEditor, ShellEditor, PythonEditor, PowershellEditor},
+    directives: {waves},
+    filters: {
+      statusFilter(status) {
+        const statusMap = {
+          published: 'success',
+          draft: 'gray',
+          deleted: 'danger'
+        }
+        return statusMap[status]
       }
-      return statusMap[status]
-    }
-  },
-  data() {
-    const validateIncStartTime = (rule, value, callback) => {
-      if (this.temp.replaceParam && !this.temp.incStartTime) {
-        callback(new Error('incStartTime is required'))
+    },
+    data() {
+      const validateIncStartTime = (rule, value, callback) => {
+        if (this.temp.replaceParam && !this.temp.incStartTime) {
+          callback(new Error('incStartTime is required'))
+        }
+        callback()
       }
-      callback()
-    }
-    return {
-      jobProjects:'',
-      authors:'',
-      list: null,
-      listLoading: true,
-      total: 0,
-      listQuery: {
-        current: 1,
-        size: 10,
-        jobGroup: 0,
-        jobProject: '',
-        triggerStatus: -1,
-        jobDesc: '',
-        glueType: '',
-        author: ''
-      },
-      dialogPluginVisible: false,
-      pluginData: [],
-      dialogFormVisible: false,
-      dialogStatus: '',
-      textMap: {
-        update: 'Edit',
-        create: 'Create'
-      },
-      rules: {
-        jobGroup: [{ required: true, message: 'jobGroup is required', trigger: 'change' }],
-        executorRouteStrategy: [{ required: true, message: 'executorRouteStrategy is required', trigger: 'change' }],
-        executorBlockStrategy: [{ required: true, message: 'executorBlockStrategy is required', trigger: 'change' }],
-        glueType: [{ required: true, message: 'jobType is required', trigger: 'change' }],
-        jobDesc: [{ required: true, message: 'jobDesc is required', trigger: 'blur' }],
-        jobProject: [{ required: true, message: 'jobProject is required', trigger: 'blur' }],
-        jobCron: [{ required: true, message: 'jobCron is required', trigger: 'blur' }],
-        author: [{ required: true, message: 'author is required', trigger: 'blur' }],
-        incStartTime: [{ trigger: 'blur', validator: validateIncStartTime }]
-      },
-      temp: {
-        id: undefined,
-        jobGroup: '',
-        jobCron: '',
-        jobDesc: '',
-        executorRouteStrategy: '',
-        executorBlockStrategy: '',
-        childJobId: '',
-        parentJobId: '',
-        executorFailRetryCount: '',
-        alarmEmail: '',
-        executorTimeout: '',
-        author: '',
-        jobConfigId: '',
-        executorHandler: '',
-        glueType: '',
-        glueSource: '',
+      return {
+        jobProjects: '',
+        authors: '',
+        list: null,
+        listLoading: true,
+        total: 0,
+        listQuery: {
+          current: 1,
+          size: 10,
+          jobGroup: 0,
+          jobProject: '',
+          triggerStatus: -1,
+          jobDesc: '',
+          glueType: '',
+          author: '',
+          id: ''
+        },
+        dialogPluginVisible: false,
+        pluginData: [],
+        dialogFormVisible: false,
+        dialogStatus: '',
+        textMap: {
+          update: 'Edit',
+          create: 'Create'
+        },
+        rules: {
+          jobGroup: [{required: true, message: 'jobGroup is required', trigger: 'change'}],
+          executorRouteStrategy: [{required: true, message: 'executorRouteStrategy is required', trigger: 'change'}],
+          executorBlockStrategy: [{required: true, message: 'executorBlockStrategy is required', trigger: 'change'}],
+          glueType: [{required: true, message: 'jobType is required', trigger: 'change'}],
+          jobDesc: [{required: true, message: 'jobDesc is required', trigger: 'blur'}],
+          jobProject: [{required: true, message: 'jobProject is required', trigger: 'blur'}],
+          jobCron: [{required: true, message: 'jobCron is required', trigger: 'blur'}],
+          author: [{required: true, message: 'author is required', trigger: 'blur'}],
+          incStartTime: [{trigger: 'blur', validator: validateIncStartTime}]
+        },
+        temp: {
+          id: undefined,
+          jobGroup: '',
+          jobCron: '',
+          jobDesc: '',
+          executorRouteStrategy: '',
+          executorBlockStrategy: '',
+          childJobId: '',
+          parentJobId: '',
+          executorFailRetryCount: '',
+          alarmEmail: '',
+          executorTimeout: '',
+          author: '',
+          jobConfigId: '',
+          executorHandler: '',
+          glueType: '',
+          glueSource: '',
+          jobJson: '',
+          executorParam: '',
+          replaceParam: '',
+          replaceParamType: 'UnitTime',
+          jvmParam: '',
+          incStartTime: '',
+          partitionInfo: ''
+        },
+        resetTemp() {
+          this.temp = this.$options.data().temp
+          this.jobJson = ''
+          this.glueSource = ''
+          this.timeOffset = 0
+          this.timeFormatType = 'yyyy-MM-dd'
+          this.partitionField = ''
+        },
+        executorList: '',
+        authorList: '',
+        JobIdList: '',
+        jobProjectList: '',
+        blockStrategies: [
+          {value: 'SERIAL_EXECUTION', label: '单机串行'},
+          {value: 'DISCARD_LATER', label: '丢弃后续调度'},
+          {value: 'COVER_EARLY', label: '覆盖之前调度'}
+        ],
+        routeStrategies: [
+          {value: 'FIRST', label: '第一个'},
+          {value: 'LAST', label: '最后一个'},
+          {value: 'ROUND', label: '轮询'},
+          {value: 'RANDOM', label: '随机'},
+          {value: 'CONSISTENT_HASH', label: '一致性HASH'},
+          {value: 'LEAST_FREQUENTLY_USED', label: '最不经常使用'},
+          {value: 'LEAST_RECENTLY_USED', label: '最近最久未使用'},
+          {value: 'FAILOVER', label: '故障转移'},
+          {value: 'BUSYOVER', label: '忙碌转移'}
+          // { value: 'SHARDING_BROADCAST', label: '分片广播' }
+        ],
+        glueTypes: [
+          {value: 'BEAN', label: 'DataX任务'},
+          {value: 'GLUE_SHELL', label: 'Shell任务'},
+          {value: 'GLUE_PYTHON', label: 'Python任务'},
+          {value: 'GLUE_POWERSHELL', label: 'PowerShell任务'}
+        ],
+        triggerNextTimes: '',
+        registerNode: [],
         jobJson: '',
-        executorParam: '',
-        replaceParam: '',
-        replaceParamType: 'UnitTime',
-        jvmParam: '',
-        incStartTime: '',
-        partitionInfo: ''
-      },
-      resetTemp() {
-        this.temp = this.$options.data().temp
-        this.jobJson = ''
-        this.glueSource = ''
-        this.timeOffset = 0
-        this.timeFormatType = 'yyyy-MM-dd'
-        this.partitionField = ''
-      },
-      executorList: '',
-      authorList: '',
-      JobIdList: '',
-      jobProjectList:'',
-      blockStrategies: [
-        { value: 'SERIAL_EXECUTION', label: '单机串行' },
-        { value: 'DISCARD_LATER', label: '丢弃后续调度' },
-        { value: 'COVER_EARLY', label: '覆盖之前调度' }
-      ],
-      routeStrategies: [
-        { value: 'FIRST', label: '第一个' },
-        { value: 'LAST', label: '最后一个' },
-        { value: 'ROUND', label: '轮询' },
-        { value: 'RANDOM', label: '随机' },
-        { value: 'CONSISTENT_HASH', label: '一致性HASH' },
-        { value: 'LEAST_FREQUENTLY_USED', label: '最不经常使用' },
-        { value: 'LEAST_RECENTLY_USED', label: '最近最久未使用' },
-        { value: 'FAILOVER', label: '故障转移' },
-        { value: 'BUSYOVER', label: '忙碌转移' }
-        // { value: 'SHARDING_BROADCAST', label: '分片广播' }
-      ],
-      glueTypes: [
-        { value: 'BEAN', label: 'DataX任务' },
-        { value: 'GLUE_SHELL', label: 'Shell任务' },
-        { value: 'GLUE_PYTHON', label: 'Python任务' },
-        { value: 'GLUE_POWERSHELL', label: 'PowerShell任务' }
-      ],
-      triggerNextTimes: '',
-      registerNode: [],
-      jobJson: '',
-      glueSource: '',
-      timeOffset: 0,
-      timeFormatType: 'yyyy-MM-dd',
-      partitionField: '',
-      timeFormatTypes: [
-        { value: 'yyyy-MM-dd', label: 'yyyy-MM-dd' },
-        { value: 'yyyyMMdd', label: 'yyyyMMdd' },
-        { value: 'yyyy/MM/dd', label: 'yyyy/MM/dd' }
-      ],
-      replaceFormatTypes: [
-        { value: 'yyyy/MM/dd', label: '日期' },
-        { value: 'HH:mm:ss', label: '时间' },
-        { value: 'yyyy/MM/dd HH:mm:ss', label: '日期+时间' },
-        { value: 'UnitTime', label: '时间戳' }
-      ],
-      statusList: [
-        { value: 500, label: '失败' },
-        { value: 502, label: '失败(超时)' },
-        { value: 200, label: '成功' },
-        { value: 0, label: '无' }
-      ]
-    }
-  },
-  created() {
-    this.fetchData()
-    this.getExecutor()
-    this.getUsers()
-    this.getJobIdList()
-    this.getJobProject()
-  },
-
-  methods: {
-    getExecutor() {
-      job.getExecutorList().then(response => {
-        const { content } = response
-        this.executorList = content
-      })
-    },
-    getUsers() {
-      job.getUsersList().then(response => {
-        const { content } = response
-        this.authorList = content
-      })
-    },
-    getJobProject(){
-      job.getJobProjectList().then(response=>{
-        const { content } = response
-        this.jobProjectList= content
-        console.log(content)
-      })
-    },
-    getJobIdList() {
-      job.getJobIdList().then(response => {
-        const { content } = response
-        this.JobIdList = content
-      })
-    },
-    fetchData() {
-      this.listLoading = true
-      if (this.authors) {
-        this.listQuery.author = this.authors.toString()
+        glueSource: '',
+        timeOffset: 0,
+        timeFormatType: 'yyyy-MM-dd',
+        partitionField: '',
+        timeFormatTypes: [
+          {value: 'yyyy-MM-dd', label: 'yyyy-MM-dd'},
+          {value: 'yyyyMMdd', label: 'yyyyMMdd'},
+          {value: 'yyyy/MM/dd', label: 'yyyy/MM/dd'}
+        ],
+        replaceFormatTypes: [
+          {value: 'yyyy/MM/dd', label: '日期'},
+          {value: 'HH:mm:ss', label: '时间'},
+          {value: 'yyyy/MM/dd HH:mm:ss', label: '日期+时间'},
+          {value: 'UnitTime', label: '时间戳'}
+        ],
+        statusList: [
+          {value: 500, label: '失败'},
+          {value: 502, label: '失败(超时)'},
+          {value: 200, label: '成功'},
+          {value: 0, label: '-'}
+        ],
+        selectRows: []
       }
-
-      if (this.jobProjects) {
-        this.listQuery.jobProject = this.jobProjects.toString()
-      }
-
-      job.getList(this.listQuery).then(response => {
-        const { content } = response
-        this.total = content.recordsTotal
-        this.list = content.data
-        this.listLoading = false
-      })
     },
-    incStartTimeFormat(vData) {
+    created() {
+      this.fetchData()
+      this.getExecutor()
+      this.getUsers()
+      this.getJobIdList()
+      this.getJobProject()
     },
-    handleCreate() {
-      this.resetTemp()
-      this.dialogStatus = 'create'
-      this.dialogFormVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
-    },
-    createData() {
-      this.$refs['dataForm'].validate((valid) => {
-        if (valid) {
-          if (this.temp.author) {
-            const auth = []
-            for (const i in this.temp.author) {
-              auth.push(this.temp.author[i].id)
-            }
-            this.temp.author = auth.toString()
-          }
 
-          if (this.temp.childJobId) {
-            const auth = []
-            for (const i in this.temp.childJobId) {
-              auth.push(this.temp.childJobId[i].id)
-            }
-            this.temp.childJobId = auth.toString()
-          }
+    methods: {
+      getExecutor() {
+        job.getExecutorList().then(response => {
+          const {content} = response
+          this.executorList = content
+        })
+      },
+      getUsers() {
+        job.getUsersList().then(response => {
+          const {content} = response
+          this.authorList = content
+        })
+      },
+      getJobProject() {
+        job.getJobProjectList().then(response => {
+          const {content} = response
+          this.jobProjectList = content
+          // console.log(content)
+        })
+      },
+      getJobIdList() {
+        job.getJobIdList().then(response => {
+          const {content} = response
+          this.JobIdList = content
+        })
+      },
+      fetchData() {
+        this.listLoading = true
+        if (this.authors) {
+          this.listQuery.author = this.authors.toString()
+        }
 
-          if (this.temp.parentJobId) {
-            const auth = []
-            for (const i in this.temp.parentJobId) {
-              auth.push(this.temp.parentJobId[i].id)
+        if (this.jobProjects) {
+          this.listQuery.jobProject = this.jobProjects.toString()
+        }
+        const param = Object.assign({}, this.listQuery)
+        const urlId = this.$route.query.id
+        param.id = urlId
+        job.getList(param).then(response => {
+          const {content} = response
+          this.total = content.recordsTotal
+          this.list = content.data
+          this.listLoading = false
+        })
+      },
+      incStartTimeFormat(vData) {
+      },
+      handleCreate() {
+        this.resetTemp()
+        this.dialogStatus = 'create'
+        this.dialogFormVisible = true
+        this.$nextTick(() => {
+          this.$refs['dataForm'].clearValidate()
+        })
+      },
+      createData() {
+        this.$refs['dataForm'].validate((valid) => {
+          if (valid) {
+            if (this.temp.author) {
+              const auth = []
+              for (const i in this.temp.author) {
+                auth.push(this.temp.author[i].id)
+              }
+              this.temp.author = auth.toString()
             }
-            this.temp.parentJobId = auth.toString()
-          }
 
-          this.temp.jobJson = this.jobJson
-          this.temp.glueSource = this.glueSource
-          this.temp.executorHandler = this.temp.glueType === 'BEAN' ? 'executorJobHandler' : ''
-          if (this.partitionField) this.temp.partitionInfo = this.partitionField + ',' + this.timeOffset + ',' + this.timeFormatType
-          job.createJob(this.temp).then(() => {
+            if (this.temp.childJobId) {
+              const auth = []
+              for (const i in this.temp.childJobId) {
+                auth.push(this.temp.childJobId[i].id)
+              }
+              this.temp.childJobId = auth.toString()
+            }
+
+            if (this.temp.parentJobId) {
+              const auth = []
+              for (const i in this.temp.parentJobId) {
+                auth.push(this.temp.parentJobId[i].id)
+              }
+              this.temp.parentJobId = auth.toString()
+            }
+
+            this.temp.jobJson = this.jobJson
+            this.temp.glueSource = this.glueSource
+            this.temp.executorHandler = this.temp.glueType === 'BEAN' ? 'executorJobHandler' : ''
+            if (this.partitionField) this.temp.partitionInfo = this.partitionField + ',' + this.timeOffset + ',' + this.timeFormatType
+            job.createJob(this.temp).then(() => {
+              this.fetchData()
+              this.dialogFormVisible = false
+              this.$notify({
+                title: 'Success',
+                message: 'Created Successfully',
+                type: 'success',
+                duration: 2000
+              })
+            })
+          }
+        })
+      },
+      handlerUpdate(row) {
+        this.resetTemp()
+        this.temp = Object.assign({}, row) // copy obj
+        if (this.temp.jobJson) this.jobJson = JSON.parse(this.temp.jobJson)
+        this.glueSource = this.temp.glueSource
+
+        const arrIntSet = []
+        const arrchildSet = []
+        const arrparentSet = []
+        const arrJobIdList = []
+        if (this.JobIdList) {
+          for (const n in this.JobIdList) {
+            if (this.JobIdList[n].id !== this.temp.id) {
+              arrJobIdList.push(this.JobIdList[n])
+            }
+          }
+        }
+
+        if (this.temp.author) {
+          // eslint-disable-next-line no-unused-vars
+          const arrString = this.temp.author.split(',')
+          for (const i in arrString) {
+            for (const n in this.authorList) {
+              // eslint-disable-next-line eqeqeq
+              if (this.authorList[n].id == arrString[i]) {
+                arrIntSet.push(this.authorList[n])
+              }
+            }
+          }
+          this.temp.author = arrIntSet
+        }
+
+        if (this.temp.childJobId) {
+          // eslint-disable-next-line no-unused-vars
+          const arrString = this.temp.childJobId.split(',')
+          // console.log(arrString)
+          // console.log(this.JobIdList)
+          for (const i in arrString) {
+            for (const n in arrJobIdList) {
+              // eslint-disable-next-line eqeqeq
+              if (arrJobIdList[n].id == arrString[i]) {
+                arrchildSet.push(arrJobIdList[n])
+              }
+            }
+          }
+          this.temp.childJobId = arrchildSet
+        }
+
+        // console.log(this.temp.childJobId)
+
+        if (this.temp.parentJobId) {
+          // eslint-disable-next-line no-unused-vars
+          const arrString = this.temp.parentJobId.split(',')
+          for (const i in arrString) {
+            for (const n in this.JobIdList) {
+              // eslint-disable-next-line eqeqeq
+              if (this.JobIdList[n].id == arrString[i]) {
+                arrparentSet.push(this.JobIdList[n])
+              }
+            }
+          }
+          this.temp.parentJobId = arrparentSet
+        }
+
+        if (this.temp.partitionInfo) {
+          const partition = this.temp.partitionInfo.split(',')
+          this.partitionField = partition[0]
+          this.timeOffset = partition[1]
+          this.timeFormatType = partition[2]
+        }
+        this.dialogStatus = 'update'
+        this.dialogFormVisible = true
+        this.$nextTick(() => {
+          this.$refs['dataForm'].clearValidate()
+        })
+      },
+      updateData() {
+        this.$refs['dataForm'].validate((valid) => {
+          if (valid) {
+            if (this.temp.author) {
+              const auth = []
+              for (const i in this.temp.author) {
+                auth.push(this.temp.author[i].id)
+              }
+              this.temp.author = auth.toString()
+            }
+
+            if (this.temp.childJobId) {
+              const auth = []
+              for (const i in this.temp.childJobId) {
+                auth.push(this.temp.childJobId[i].id)
+              }
+              this.temp.childJobId = auth.toString()
+            }
+
+            if (this.temp.parentJobId) {
+              const auth = []
+              for (const i in this.temp.parentJobId) {
+                auth.push(this.temp.parentJobId[i].id)
+              }
+              this.temp.parentJobId = auth.toString()
+            }
+            this.temp.executorHandler = this.temp.glueType === 'BEAN' ? 'executorJobHandler' : ''
+            this.temp.jobJson = typeof (this.jobJson) !== 'string' ? JSON.stringify(this.jobJson) : this.jobJson
+            this.temp.glueSource = this.glueSource
+            if (this.partitionField) this.temp.partitionInfo = this.partitionField + ',' + this.timeOffset + ',' + this.timeFormatType
+            job.updateJob(this.temp).then(() => {
+              this.fetchData()
+              this.dialogFormVisible = false
+              this.$notify({
+                title: 'Success',
+                message: 'Update Successfully',
+                type: 'success',
+                duration: 2000
+              })
+            })
+          }
+        })
+      },
+      handlerDelete(row) {
+        this.$confirm('确定删除吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          job.removeJob(row.id).then(response => {
             this.fetchData()
-            this.dialogFormVisible = false
             this.$notify({
               title: 'Success',
-              message: 'Created Successfully',
+              message: 'Delete Successfully',
               type: 'success',
               duration: 2000
             })
           })
+        })
+
+        // const index = this.list.indexOf(row)
+      },
+      handlerExecute(row) {
+        let ids;
+        if (row.id === undefined) {
+          if (this.selectRows.length < 1) {
+            this.$message({
+              message: "请先选择要执行的选项~",
+              type: "error"
+            })
+            return;
+          }
+          ids = this.selectRows.join(",");
+        } else {
+          ids = row.id
         }
-      })
-    },
-    handlerUpdate(row) {
-      this.resetTemp()
-      this.temp = Object.assign({}, row) // copy obj
-      if (this.temp.jobJson) this.jobJson = JSON.parse(this.temp.jobJson)
-      this.glueSource = this.temp.glueSource
-
-      const arrIntSet = []
-      const arrchildSet = []
-      const arrparentSet = []
-      const arrJobIdList = []
-      if (this.JobIdList) {
-        for (const n in this.JobIdList) {
-          if (this.JobIdList[n].id !== this.temp.id) {
-            arrJobIdList.push(this.JobIdList[n])
-          }
-        }
-        this.JobIdList = arrJobIdList
-      }
-
-      if (this.temp.author) {
-        // eslint-disable-next-line no-unused-vars
-        const arrString = this.temp.author.split(',')
-        for (const i in arrString) {
-          for (const n in this.authorList) {
-            // eslint-disable-next-line eqeqeq
-            if (this.authorList[n].id == arrString[i]) {
-              arrIntSet.push(this.authorList[n])
-            }
-          }
-        }
-        this.temp.author = arrIntSet
-      }
-
-      if (this.temp.childJobId) {
-        // eslint-disable-next-line no-unused-vars
-        const arrString = this.temp.childJobId.split(',')
-        console.log(arrString)
-        console.log(this.JobIdList)
-        for (const i in arrString) {
-          for (const n in this.JobIdList) {
-            // eslint-disable-next-line eqeqeq
-            if (this.JobIdList[n].id == arrString[i]) {
-              arrchildSet.push(this.JobIdList[n])
-            }
-          }
-        }
-        this.temp.childJobId = arrchildSet
-      }
-
-      console.log(this.temp.childJobId)
-
-      if (this.temp.parentJobId) {
-        // eslint-disable-next-line no-unused-vars
-        const arrString = this.temp.parentJobId.split(',')
-        for (const i in arrString) {
-          for (const n in this.JobIdList) {
-            // eslint-disable-next-line eqeqeq
-            if (this.JobIdList[n].id == arrString[i]) {
-              arrparentSet.push(this.JobIdList[n])
-            }
-          }
-        }
-        this.temp.parentJobId = arrparentSet
-      }
-
-      if (this.temp.partitionInfo) {
-        const partition = this.temp.partitionInfo.split(',')
-        this.partitionField = partition[0]
-        this.timeOffset = partition[1]
-        this.timeFormatType = partition[2]
-      }
-      this.dialogStatus = 'update'
-      this.dialogFormVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
-    },
-    updateData() {
-      this.$refs['dataForm'].validate((valid) => {
-        if (valid) {
-          if (this.temp.author) {
-            const auth = []
-            for (const i in this.temp.author) {
-              auth.push(this.temp.author[i].id)
-            }
-            this.temp.author = auth.toString()
-          }
-
-          if (this.temp.childJobId) {
-            const auth = []
-            for (const i in this.temp.childJobId) {
-              auth.push(this.temp.childJobId[i].id)
-            }
-            this.temp.childJobId = auth.toString()
-          }
-
-          if (this.temp.parentJobId) {
-            const auth = []
-            for (const i in this.temp.parentJobId) {
-              auth.push(this.temp.parentJobId[i].id)
-            }
-            this.temp.parentJobId = auth.toString()
-          }
-          this.temp.executorHandler = this.temp.glueType === 'BEAN' ? 'executorJobHandler' : ''
-          this.temp.jobJson = typeof (this.jobJson) !== 'string' ? JSON.stringify(this.jobJson) : this.jobJson
-          this.temp.glueSource = this.glueSource
-          if (this.partitionField) this.temp.partitionInfo = this.partitionField + ',' + this.timeOffset + ',' + this.timeFormatType
-          job.updateJob(this.temp).then(() => {
-            this.fetchData()
-            this.dialogFormVisible = false
+        this.$confirm('确定执行吗？', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          const param = {}
+          param.jobId = ids
+          param.executorParam = ""
+          job.triggerJob(param).then(response => {
             this.$notify({
               title: 'Success',
-              message: 'Update Successfully',
+              message: 'Execute Successfully',
               type: 'success',
               duration: 2000
             })
           })
+        })
+      },
+      // 查看日志
+      handlerViewLog(row) {
+        this.$router.push({path: '/datax/log/jobLog', query: {jobId: row.id}})
+      },
+
+      handleCommand(command) {
+        let ids;
+        if (this.selectRows.length < 1) {
+          this.$message({
+            message: "请先选择要操作的选项~",
+            type: "error"
+          })
+          return;
         }
-      })
-    },
-    handlerDelete(row) {
-      this.$confirm('确定删除吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        job.removeJob(row.id).then(response => {
+        ids = this.selectRows.join(",");
+        if (command == 1) {
+          this.handlerStart(ids);
+        } else {
+          this.handlerStop(ids);
+        }
+
+      },
+      handlerStart(row) {
+        var ids;
+        if (row.id === undefined) {
+          ids = row
+        } else {
+          ids = row.id;
+        }
+        job.startJob(ids).then(response => {
           this.fetchData()
           this.$notify({
             title: 'Success',
-            message: 'Delete Successfully',
+            message: 'Start Successfully',
             type: 'success',
             duration: 2000
           })
         })
-      })
-
-      // const index = this.list.indexOf(row)
-    },
-    handlerExecute(row) {
-      this.$confirm('确定执行吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        const param = {}
-        param.jobId = row.id
-        param.executorParam = row.executorParam
-        job.triggerJob(param).then(response => {
+      },
+      handlerStop(row) {
+        var ids;
+        if (row.id === undefined) {
+          ids = row
+        } else {
+          ids = row.id;
+        }
+        job.stopJob(ids).then(response => {
+          this.fetchData()
           this.$notify({
             title: 'Success',
-            message: 'Execute Successfully',
+            message: 'Start Successfully',
             type: 'success',
             duration: 2000
           })
         })
-      })
-    },
-    // 查看日志
-    handlerViewLog(row) {
-      this.$router.push({ path: '/datax/log/jobLog', query: { jobId: row.id }})
-    },
-    handlerStart(row) {
-      job.startJob(row.id).then(response => {
-        this.$notify({
-          title: 'Success',
-          message: 'Start Successfully',
-          type: 'success',
-          duration: 2000
+      },
+      changeSwitch(row) {
+        row.triggerStatus === 1 ? this.handlerStart(row) : this.handlerStop(row)
+      },
+      nextTriggerTime(row) {
+        job.nextTriggerTime(row.jobCron).then(response => {
+          const {content} = response
+          this.triggerNextTimes = content.join('<br>')
         })
-      })
-    },
-    handlerStop(row) {
-      job.stopJob(row.id).then(response => {
-        this.$notify({
-          title: 'Success',
-          message: 'Start Successfully',
-          type: 'success',
-          duration: 2000
+      },
+      loadById(row) {
+        executor.loadById(row.jobGroup).then(response => {
+          this.registerNode = []
+          const {content} = response
+          this.registerNode.push(content)
         })
-      })
-    },
-    changeSwitch(row) {
-      row.triggerStatus === 1 ? this.handlerStart(row) : this.handlerStop(row)
-    },
-    nextTriggerTime(row) {
-      job.nextTriggerTime(row.jobCron).then(response => {
-        const { content } = response
-        this.triggerNextTimes = content.join('<br>')
-      })
-    },
-    loadById(row) {
-      executor.loadById(row.jobGroup).then(response => {
-        this.registerNode = []
-        const { content } = response
-        this.registerNode.push(content)
-      })
+      },
+      handleSelectionChange(rows) {
+        this.selectRows = [];
+        for (const i in rows) {
+          this.selectRows.push(rows[i].id)
+        }
+
+      },
+      handleReserve(row) {
+        return row.id
+      }
     }
   }
-}
 </script>
 
 <style>

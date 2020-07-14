@@ -10,6 +10,14 @@ export function getList(params) {
   })
 }
 
+export function getLogs(params) {
+  return request({
+    url: '/api/user/logs',
+    method: 'post',
+    params
+  })
+}
+
 export function updateUser(data) {
   return request({
     url: '/api/user/update',

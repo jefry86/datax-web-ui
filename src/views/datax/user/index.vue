@@ -77,9 +77,9 @@
         <el-form-item label="用户名" prop="username">
           <el-input v-model="temp.username" placeholder="用户名" />
         </el-form-item>
-        <el-form-item label="密  码" prop="password">
-          <el-input v-model="temp.password" placeholder="密码" />
-        </el-form-item>
+<!--        <el-form-item label="密  码" prop="password">-->
+<!--          <el-input v-model="temp.password" placeholder="密码" />-->
+<!--        </el-form-item>-->
         <el-form-item label="昵  称" prop="nickname">
           <el-input v-model="temp.nickname" placeholder="昵称" />
         </el-form-item>

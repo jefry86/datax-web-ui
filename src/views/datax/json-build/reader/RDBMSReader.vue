@@ -20,6 +20,8 @@
         <el-input v-model="readerForm.querySql" :autosize="{ minRows: 3, maxRows: 20}" type="textarea"
                   placeholder="sql查询，一般用于多表关联查询时才用" style="width: 42%"/>
         <el-button type="primary" @click.prevent="getColumns('reader')">解析字段</el-button>
+        <el-button @click="addColums()">手动填写字段</el-button>
+
       </el-form-item>
       <el-form-item label="切分字段：">
         <el-input v-model="readerForm.splitPk" placeholder="切分主键" style="width: 13%"/>
@@ -29,12 +31,15 @@
           v-model="readerForm.checkAll"
           :indeterminate="readerForm.isIndeterminate"
           @change="rHandleCheckAllChange"
+          v-show="checkAllIsShow"
         >全选
         </el-checkbox>
         <div style="margin: 15px 0;"/>
-        <el-checkbox-group v-model="readerForm.columns" @change="rHandleCheckedChange">
+        <el-checkbox-group v-model="readerForm.columns" @change="rHandleCheckedChange"  v-show="checkAllIsShow">
           <el-checkbox v-for="c in rColumnList" :key="c" :label="c">{{ c }}</el-checkbox>
         </el-checkbox-group>
+        <el-input v-model="readerForm.customColumns" placeholder="请填写字段，使用,分隔" style="width: 60%"
+                  v-show="customColumnsIsShow"/>
       </el-form-item>
       <el-form-item label="where条件：" prop="where">
         <el-input v-model="readerForm.where" placeholder="where条件，不需要再加where" type="textarea" style="width: 42%"/>
@@ -60,6 +65,8 @@
         rTbList: [],
         rColumnList: [],
         loading: false,
+        customColumnsIsShow: false,
+        checkAllIsShow: true,
         active: 1,
         customFields: '',
         customType: '',
@@ -73,7 +80,8 @@
           querySql: '',
           checkAll: false,
           isIndeterminate: true,
-          splitPk: ''
+          splitPk: '',
+          customColumns: ''
         },
         rules: {
           datasourceId: [{required: true, message: 'this is required', trigger: 'change'}],
@@ -147,12 +155,18 @@
       // 获取表字段
       getColumns(type) {
         if (type === 'reader') {
+          this.customColumnsIsShow = false
+          this.checkAllIsShow = true
           if (this.readerForm.querySql !== '') {
             this.getColumnsByQuerySql()
           } else {
             this.getTableColumns()
           }
         }
+      },
+      addColums() {
+        this.customColumnsIsShow = true
+        this.checkAllIsShow = false
       },
       // 表切换
       rTbChange(t) {
@@ -171,6 +185,10 @@
         this.readerForm.isIndeterminate = checkedCount > 0 && checkedCount < this.rColumnList.length
       },
       getData() {
+        if (this.customColumnsIsShow) {
+          this.readerForm.columns = this.readerForm.customColumns.split(",")
+        }
+        console.log(this.readerForm)
         return this.readerForm
       }
     }

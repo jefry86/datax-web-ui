@@ -144,13 +144,13 @@
           </el-col>
         </el-row>
         <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="父任务ID">
-              <el-select v-model="temp.parentJobId" multiple placeholder="父任务ID" value-key="id">
-                <el-option v-for="item in JobIdList" :key="item.id" :label="item.jobDesc" :value="item" />
-              </el-select>
-            </el-form-item>
-          </el-col>
+<!--          <el-col :span="12">-->
+<!--            <el-form-item label="父任务ID">-->
+<!--              <el-select v-model="temp.parentJobId" multiple placeholder="父任务ID" value-key="id">-->
+<!--                <el-option v-for="item in JobIdList" :key="item.id" :label="item.jobDesc" :value="item" />-->
+<!--              </el-select>-->
+<!--            </el-form-item>-->
+<!--          </el-col>-->
           <el-col :span="12">
             <el-form-item label="子任务ID">
               <el-select v-model="temp.childJobId" multiple placeholder="子任务ID" value-key="id">

@@ -18,16 +18,16 @@ export function triggerJob(data) {
   })
 }
 
-export function startJob(id) {
+export function startJob(ids) {
   return request({
-    url: '/api/job/start?id=' + id,
+    url: '/api/job/start?ids=' + ids,
     method: 'post'
   })
 }
 
-export function stopJob(id) {
+export function stopJob(ids) {
   return request({
-    url: '/api/job/stop?id=' + id,
+    url: '/api/job/stop?ids=' + ids,
     method: 'post'
   })
 }
